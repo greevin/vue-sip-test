@@ -1,4 +1,4 @@
-# vue-sip-test
+# Vue JsSip Test
 
 ## Project setup
 ```
