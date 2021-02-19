@@ -2,15 +2,19 @@
   <div class="hello">
     <div id="errorMessage">must set sip uri/password</div>
     <div id="wrapper">
-      <div id="incomingCall" style="display: none">
+      <div id="incomingCall" style="display: block">
         <div class="callInfo">
           <h3>Incoming Call</h3>
           <p id="incomingCallNumber">Unknown</p>
         </div>
-        <div id="answer"><i class="fa fa-phone"></i></div>
-        <div id="reject"><i class="fa fa-phone"></i></div>
+        <div id="answer" @click="answerCallClick">
+          <i class="fa fa-phone"></i>
+        </div>
+        <div id="reject" @click="rejectCallClick">
+          <i class="fa fa-phone"></i>
+        </div>
       </div>
-      <div id="callStatus" style="display: none">
+      <div id="callStatus" style="display: block">
         <div class="callInfo">
           <h3 id="callInfoText">info text goes here</h3>
           <p id="callInfoNumber">info number goes here</p>
@@ -19,7 +23,7 @@
       </div>
       <!---------TO FIELD---------------------------------------------------->
       <!---------DIALPAD---------------------------------------------------->
-      <div id="inCallButtons" style="display: none">
+      <div id="inCallButtons" style="display: block">
         <div id="dialPad">
           <div class="dialpad-char" data-value="1" unselectable="on">1</div>
           <div class="dialpad-char" data-value="2" unselectable="on">2</div>
@@ -34,7 +38,7 @@
           <div class="dialpad-char" data-value="0" unselectable="on">0</div>
           <div class="dialpad-char" data-value="#" unselectable="on">#</div>
         </div>
-        <div id="mute">
+        <div id="mute" @click="muteCall">
           <i id="muteIcon" class="fa fa-microphone"></i>
         </div>
       </div>
@@ -42,9 +46,16 @@
       <!---------DIAL CONTROLS-------------------------------------------->
       <div id="callControl">
         <div id="to">
-          <input id="toField" type="text" placeholder="Enter number here" />
+          <input
+            id="toField"
+            v-model="dest"
+            type="text"
+            placeholder="Enter number here"
+          />
         </div>
-        <div id="connectCall"><i class="fa fa-phone"></i></div>
+        <div id="connectCall" @click="connectCallClick()">
+          <i class="fa fa-phone"></i>
+        </div>
       </div>
     </div>
   </div>
@@ -53,26 +64,26 @@
 <script>
 import JsSIP from "jssip";
 export default {
-  name: "HelloWorld",
+  name: "CallSip",
   props: {
     msg: String,
   },
   data() {
     return {
-      configuration: {
-        sockets: [new JsSIP.WebSocketInterface("wss://tryit.jssip.net:10443")],
-        uri: "sip:teste_cbrdxv@tryit.jssip.net", // FILL SIP URI HERE like sip:sip-user@your-domain.bwapp.bwsip.io
-        username: "teste", // FILL USERNAME HERE
-        password: "1234", // FILL PASSWORD HERE
-        register: true,
-      },
-      phone: null,
-      session: null,
-      incomingCallAudio: new window.Audio("@/assets/dial-tone.mp3"),
-      remoteAudio: new window.Audio(),
       callOptions: {
         mediaConstraints: { audio: true, video: false },
       },
+      configuration: {
+        sockets: [new JsSIP.WebSocketInterface("wss://tryit.jssip.net:10443")],
+        uri: "sip:teste_cbrdxv@tryit.jssip.net", // FILL SIP URI HERE like sip:sip-user@your-domain.bwapp.bwsip.io
+        password: "1234", // FILL PASSWORD HERE
+        register: true,
+      },
+      dest: "sip:teste_cbrdxv@tryit.jssip.net",
+      incomingCallAudio: new window.Audio("@/assets/dial-tone.mp3"),
+      phone: null,
+      remoteAudio: new window.Audio(),
+      session: null,
     };
   },
   methods: {
@@ -88,18 +99,21 @@ export default {
       this.incomingCallOptions();
       this.remoteAudioOptions();
 
+      this.phone = new JsSIP.UA(this.configuration);
+
       if (this.configuration.uri && this.configuration.password) {
         JsSIP.debug.enable("JsSIP:*");
-        this.phone = new JsSIP.UA(this.configuration);
         this.phone.on("registrationFailed", function (ev) {
-          console.log(ev);
+          console.log("registrationFailed");
           alert("Registering on SIP server failed with error: " + ev.cause);
           this.configuration.uri = null;
           this.configuration.password = null;
-          // updateUI();
+
+          // this.updateUI();
         });
 
         this.phone.on("newRTCSession", function (ev) {
+          console.log("newRTCSession");
           let newSession = ev.session;
 
           if (this.session) {
@@ -110,12 +124,15 @@ export default {
           this.session = newSession;
           let completeSession = function () {
             this.session = null;
-            // updateUI();
+            console.log("completeSession");
+            this.updateUI;
           };
 
           this.session.on("ended", completeSession);
           this.session.on("failed", completeSession);
-          // this.session.on("accepted", updateUI);
+          this.session.on("accepted", function () {
+            console.log("accepted");
+          });
           this.session.on("confirmed", function () {
             let localStream = this.session.connection.getLocalStreams()[0];
             let dtmfSender = this.session.connection.createDTMFSender(
@@ -124,7 +141,8 @@ export default {
             this.session.sendDTMF = function (tone) {
               dtmfSender.insertDTMF(tone);
             };
-            // updateUI();
+            console.log("confirmed");
+            // this.updateUI();
           });
 
           this.session.on("peerconnection", (e) => {
@@ -157,7 +175,7 @@ export default {
               this.remoteAudio.srcObject = e.stream;
             });
           }
-          // updateUI();
+          // this.updateUI();
         });
 
         this.phone.start();
@@ -165,6 +183,41 @@ export default {
     },
     updateUI() {
       console.log("updateUI");
+      if (this.session) {
+        if (this.session.isInProgress()) {
+          if (this.session.direction === "incoming") {
+            console.log("incoming if");
+          } else {
+            console.log("incoming else");
+          }
+        } else if (this.session.isEstablished()) {
+          this.incomingCallAudio.pause();
+        }
+      } else {
+        this.incomingCallAudio.pause();
+      }
+    },
+    connectCallClick() {
+      this.phone.call(this.dest, this.callOptions);
+      console.log(this.phone.call(this.dest, this.callOptions));
+      // this.updateUI();
+    },
+    answerCallClick() {
+      this.session.answer(this.callOptions);
+    },
+    rejectCallClick() {
+      console.log("rejectCallClick");
+    },
+    inCallButtons(e) {
+      console.log(e);
+    },
+    muteCall() {
+      console.log("MUTE CLICKED");
+      if (this.session.isMuted().audio) {
+        this.session.unmute({ audio: true });
+      } else {
+        this.session.mute({ audio: true });
+      }
     },
   },
   mounted() {
