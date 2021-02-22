@@ -1,6 +1,6 @@
 <template>
   <div class="hello">
-    <div id="errorMessage">must set sip uri/password</div>
+    <div id="errorMessage">{{ errorMessage }}</div>
     <div id="wrapper">
       <div id="incomingCall" style="display: block">
         <div class="callInfo">
@@ -14,6 +14,7 @@
           <i class="fa fa-phone"></i>
         </div>
       </div>
+
       <div id="callStatus" style="display: block">
         <div class="callInfo">
           <h3 id="callInfoText">info text goes here</h3>
@@ -21,6 +22,7 @@
         </div>
         <div id="hangUp"><i class="fa fa-phone"></i></div>
       </div>
+
       <!---------TO FIELD---------------------------------------------------->
       <!---------DIALPAD---------------------------------------------------->
       <div id="inCallButtons" style="display: block">
@@ -72,6 +74,7 @@ export default {
     return {
       callOptions: {
         mediaConstraints: { audio: true, video: false },
+        pcConfig: { rtcpMuxPolicy: "negotiate" },
       },
       configuration: {
         sockets: [new JsSIP.WebSocketInterface("wss://tryit.jssip.net:10443")],
@@ -84,6 +87,7 @@ export default {
       phone: null,
       remoteAudio: new window.Audio(),
       session: null,
+      errorMessage: "must set sip uri/password",
     };
   },
   methods: {
@@ -103,17 +107,16 @@ export default {
 
       if (this.configuration.uri && this.configuration.password) {
         JsSIP.debug.enable("JsSIP:*");
-        this.phone.on("registrationFailed", function (ev) {
-          console.log("registrationFailed");
-          alert("Registering on SIP server failed with error: " + ev.cause);
+        this.phone.on("registrationFailed", (ev) => {
+          this.errorMessage =
+            "Registering on SIP server failed with error: " + ev.cause;
           this.configuration.uri = null;
           this.configuration.password = null;
 
           // this.updateUI();
         });
 
-        this.phone.on("newRTCSession", function (ev) {
-          console.log("newRTCSession");
+        this.phone.on("newRTCSession", (ev) => {
           let newSession = ev.session;
 
           if (this.session) {
@@ -122,55 +125,41 @@ export default {
           }
 
           this.session = newSession;
-          let completeSession = function () {
-            this.session = null;
+          let completeSession = () => {
             console.log("completeSession");
-            this.updateUI;
+            this.session = null;
+            // this.updateUI();
           };
+
+          this.session.on("peerconnection", function (data) {
+            data.peerconnection.addEventListener("addstream", function (e) {
+              this.incomingCallAudio.pause();
+              this.remoteAudio.src = window.URL.createObjectURL(e.stream);
+            });
+          });
 
           this.session.on("ended", completeSession);
           this.session.on("failed", completeSession);
-          this.session.on("accepted", function () {
+          this.session.on("accepted", () => {
             console.log("accepted");
           });
-          this.session.on("confirmed", function () {
+          this.session.on("confirmed", () => {
             let localStream = this.session.connection.getLocalStreams()[0];
             let dtmfSender = this.session.connection.createDTMFSender(
               localStream.getAudioTracks()[0]
             );
-            this.session.sendDTMF = function (tone) {
+            this.session.sendDTMF = (tone) => {
               dtmfSender.insertDTMF(tone);
             };
             console.log("confirmed");
             // this.updateUI();
           });
 
-          this.session.on("peerconnection", (e) => {
-            console.log("peerconnection", e);
-            // let logError = "";
-            const peerconnection = e.peerconnection;
-
-            peerconnection.onaddstream = function (e) {
-              console.log("addstream", e);
-              // set remote audio stream (to listen to remote audio)
-              // remoteAudio is <audio> element on pag
-              this.remoteAudio.srcObject = e.stream;
-              this.remoteAudio.play();
-            };
-
-            let remoteStream = new MediaStream();
-            console.log(peerconnection.getReceivers());
-            peerconnection.getReceivers().forEach(function (receiver) {
-              console.log(receiver);
-              remoteStream.addTrack(receiver.track);
-            });
-          });
-
           if (this.session.direction === "incoming") {
             this.incomingCallAudio.play();
           } else {
             console.log("con", this.session.connection);
-            this.session.connection.addEventListener("addstream", function (e) {
+            this.session.connection.addEventListener("addstream", (e) => {
               this.incomingCallAudio.pause();
               this.remoteAudio.srcObject = e.stream;
             });
@@ -180,6 +169,16 @@ export default {
 
         this.phone.start();
       }
+    },
+    connectCallClick() {
+      this.phone.call(this.dest, this.callOptions);
+    },
+    answerCallClick() {
+      this.session.answer(this.callOptions);
+    },
+    rejectCallClick() {
+      console.log("rejectCallClick");
+      this.session.terminate();
     },
     updateUI() {
       console.log("updateUI");
@@ -196,17 +195,6 @@ export default {
       } else {
         this.incomingCallAudio.pause();
       }
-    },
-    connectCallClick() {
-      this.phone.call(this.dest, this.callOptions);
-      console.log(this.phone.call(this.dest, this.callOptions));
-      // this.updateUI();
-    },
-    answerCallClick() {
-      this.session.answer(this.callOptions);
-    },
-    rejectCallClick() {
-      console.log("rejectCallClick");
     },
     inCallButtons(e) {
       console.log(e);
