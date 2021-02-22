@@ -1,11 +1,11 @@
 <template>
   <div class="hello">
     <div id="errorMessage">{{ errorMessage }}</div>
-    <div id="wrapper">
-      <div id="incomingCall" style="display: block">
+    <div id="wrapper" v-if="showNumbers">
+      <div id="incomingCall" v-if="incomingCall">
         <div class="callInfo">
           <h3>Incoming Call</h3>
-          <p id="incomingCallNumber">Unknown</p>
+          <p id="incomingCallNumber">{{ incomingCallNumber }}</p>
         </div>
         <div id="answer" @click="answerCallClick">
           <i class="fa fa-phone"></i>
@@ -15,17 +15,17 @@
         </div>
       </div>
 
-      <div id="callStatus" style="display: block">
+      <div id="callStatus" v-if="callStatus">
         <div class="callInfo">
-          <h3 id="callInfoText">info text goes here</h3>
-          <p id="callInfoNumber">info number goes here</p>
+          <h3 id="callInfoText">{{ callInfoText }}</h3>
+          <p id="callInfoNumber">{{ callInfoNumber }}</p>
         </div>
-        <div id="hangUp"><i class="fa fa-phone"></i></div>
+        <div id="hangUp"><i class="fa fa-phone" @click="hangUp"></i></div>
       </div>
 
       <!---------TO FIELD---------------------------------------------------->
       <!---------DIALPAD---------------------------------------------------->
-      <div id="inCallButtons" style="display: block">
+      <div id="inCallButtons" style="display: none">
         <div id="dialPad">
           <div class="dialpad-char" data-value="1" unselectable="on">1</div>
           <div class="dialpad-char" data-value="2" unselectable="on">2</div>
@@ -41,7 +41,7 @@
           <div class="dialpad-char" data-value="#" unselectable="on">#</div>
         </div>
         <div id="mute" @click="muteCall">
-          <i id="muteIcon" class="fa fa-microphone"></i>
+          <i id="muteIcon" class="fa" :class="muteIcon"></i>
         </div>
       </div>
 
@@ -74,7 +74,6 @@ export default {
     return {
       callOptions: {
         mediaConstraints: { audio: true, video: false },
-        pcConfig: { rtcpMuxPolicy: "negotiate" },
       },
       configuration: {
         sockets: [new JsSIP.WebSocketInterface("wss://tryit.jssip.net:10443")],
@@ -88,6 +87,13 @@ export default {
       remoteAudio: new window.Audio(),
       session: null,
       errorMessage: "must set sip uri/password",
+      showNumbers: false,
+      muteIcon: "fa-microphone",
+      callInfoNumber: "",
+      callInfoText: "",
+      callStatus: false,
+      incomingCallNumber: "",
+      incomingCall: false,
     };
   },
   methods: {
@@ -112,8 +118,10 @@ export default {
             "Registering on SIP server failed with error: " + ev.cause;
           this.configuration.uri = null;
           this.configuration.password = null;
+          this.showNumbers = false;
+          console.log("registrationFailed");
 
-          // this.updateUI();
+          this.updateUI();
         });
 
         this.phone.on("newRTCSession", (ev) => {
@@ -126,13 +134,12 @@ export default {
 
           this.session = newSession;
           let completeSession = () => {
-            console.log("completeSession");
             this.session = null;
-            // this.updateUI();
+            this.updateUI();
           };
 
-          this.session.on("peerconnection", function (data) {
-            data.peerconnection.addEventListener("addstream", function (e) {
+          this.session.on("peerconnection", (data) => {
+            data.peerconnection.addEventListener("addstream", (e) => {
               this.incomingCallAudio.pause();
               this.remoteAudio.src = window.URL.createObjectURL(e.stream);
             });
@@ -141,7 +148,7 @@ export default {
           this.session.on("ended", completeSession);
           this.session.on("failed", completeSession);
           this.session.on("accepted", () => {
-            console.log("accepted");
+            this.updateUI();
           });
           this.session.on("confirmed", () => {
             let localStream = this.session.connection.getLocalStreams()[0];
@@ -151,23 +158,59 @@ export default {
             this.session.sendDTMF = (tone) => {
               dtmfSender.insertDTMF(tone);
             };
-            console.log("confirmed");
-            // this.updateUI();
+            this.updateUI();
           });
 
           if (this.session.direction === "incoming") {
             this.incomingCallAudio.play();
           } else {
-            console.log("con", this.session.connection);
             this.session.connection.addEventListener("addstream", (e) => {
               this.incomingCallAudio.pause();
               this.remoteAudio.srcObject = e.stream;
             });
           }
-          // this.updateUI();
+          this.updateUI();
         });
 
+        this.updateUI();
         this.phone.start();
+      }
+    },
+    updateUI() {
+      if (this.configuration.uri && this.configuration.password) {
+        this.errorMessage = "";
+        this.showNumbers = true;
+
+        if (this.session) {
+          if (this.session.isInProgress()) {
+            if (this.session.direction === "incoming") {
+              this.incomingCallNumber = this.session.remote_identity.uri;
+              this.incomingCall = true;
+            } else {
+              this.callInfoText = "Ringing...";
+              this.callInfoNumber = this.session.remote_identity.uri.user;
+              this.callStatus = true;
+            }
+          } else if (this.session.isEstablished()) {
+            this.callInfoText = "In Call";
+            this.callInfoNumber = this.session.remote_identity.uri.user;
+            this.callStatus = true;
+            this.incomingCallAudio.pause();
+          }
+        } else {
+          this.callStatus = false;
+          this.incomingCall = false;
+          this.incomingCallAudio.pause();
+        }
+
+        //microphone mute icon
+        if (this.session && this.session.isMuted().audio) {
+          this.muteIcon = "fa-microphone-slash";
+        } else {
+          this.muteIcon = "fa-microphone";
+        }
+      } else {
+        this.showNumbers = false;
       }
     },
     connectCallClick() {
@@ -176,28 +219,18 @@ export default {
     answerCallClick() {
       this.session.answer(this.callOptions);
     },
-    rejectCallClick() {
-      console.log("rejectCallClick");
-      this.session.terminate();
-    },
-    updateUI() {
-      console.log("updateUI");
-      if (this.session) {
-        if (this.session.isInProgress()) {
-          if (this.session.direction === "incoming") {
-            console.log("incoming if");
-          } else {
-            console.log("incoming else");
-          }
-        } else if (this.session.isEstablished()) {
-          this.incomingCallAudio.pause();
-        }
-      } else {
-        this.incomingCallAudio.pause();
-      }
-    },
     inCallButtons(e) {
       console.log(e);
+    },
+    terminateCall() {
+      console.log("hangUpClick");
+      this.session.terminate();
+    },
+    rejectCallClick() {
+      this.terminateCall();
+    },
+    hangUp() {
+      this.terminateCall();
     },
     muteCall() {
       console.log("MUTE CLICKED");
@@ -229,6 +262,9 @@ body {
 #wrapper {
   width: 300px;
   margin: 0 auto;
+}
+#errorMessage {
+  text-align: center;
 }
 .callInfo {
   width: 190px;
