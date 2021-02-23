@@ -256,13 +256,6 @@ export default {
 @charset "UTF-8";
 
 /* CSS Document */
-html,
-body {
-  margin: 0;
-  padding: 0;
-  font-family: "Open Sans", sans-serif;
-  color: #494949;
-}
 #wrapper {
   width: 300px;
   margin: 0 auto;

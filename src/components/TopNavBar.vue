@@ -4,7 +4,7 @@
       <b-navbar-brand href="#">Vue JsSIP</b-navbar-brand>
       <b-navbar-nav class="ml-auto">
         <!-- Navbar dropdowns -->
-        <b-dropdown id="dropdown-1" right>
+        <b-dropdown id="dropdown-1" right no-caret>
           <template #button-content>
             <i class="fa fa-phone"></i>
           </template>
@@ -15,16 +15,21 @@
               v-for="(item, index) in notifications"
               :key="index"
             >
-              <b-container class="bv-example-row">
-                <b-row>
-                  <b-col cols="10"
-                    ><span>{{ item.name }}</span>
-                    <br />
-                    <small>{{ item.sip }}</small></b-col
-                  >
-                  <b-col cols="2"><i class="fa fa-phone"></i></b-col>
-                </b-row>
-              </b-container>
+              <b-row>
+                <b-col
+                  cols="10"
+                  style="padding-left: 0px"
+                  class="d-flex flex-column"
+                  ><span>{{ item.name }}</span>
+                  <small>{{ item.sip }}</small></b-col
+                >
+                <b-col
+                  cols="2"
+                  style="padding-right: 0px"
+                  class="d-flex justify-content-center align-items-center"
+                  ><i class="fa fa-phone"></i
+                ></b-col>
+              </b-row>
             </b-dropdown-item>
           </div>
         </b-dropdown>
@@ -45,5 +50,8 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
+.fa-phone {
+  font-size: 24px;
+}
 </style>
