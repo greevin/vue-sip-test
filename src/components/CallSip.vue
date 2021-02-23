@@ -1,5 +1,6 @@
 <template>
   <div class="hello">
+    <TopNavBar />
     <div id="errorMessage">{{ errorMessage }}</div>
     <div id="wrapper" v-if="showNumbers">
       <div id="incomingCall" v-if="incomingCall">
@@ -65,10 +66,14 @@
 
 <script>
 import JsSIP from "jssip";
+import TopNavBar from "./TopNavBar";
 export default {
   name: "CallSip",
   props: {
     msg: String,
+  },
+  components: {
+    TopNavBar,
   },
   data() {
     return {
@@ -76,9 +81,9 @@ export default {
         mediaConstraints: { audio: true, video: false },
       },
       configuration: {
-        sockets: [new JsSIP.WebSocketInterface("wss://tryit.jssip.net:10443")],
-        uri: "sip:teste_cbrdxv@tryit.jssip.net", // FILL SIP URI HERE like sip:sip-user@your-domain.bwapp.bwsip.io
-        password: "1234", // FILL PASSWORD HERE
+        sockets: [new JsSIP.WebSocketInterface("wss://20.51.122.220:8089/ws")],
+        uri: "sip:6001@20.51.122.220", // FILL SIP URI HERE like sip:sip-user@your-domain.bwapp.bwsip.io
+        password: "6001$", // FILL PASSWORD HERE
         register: true,
       },
       dest: "sip:teste_cbrdxv@tryit.jssip.net",
@@ -223,7 +228,6 @@ export default {
       console.log(e);
     },
     terminateCall() {
-      console.log("hangUpClick");
       this.session.terminate();
     },
     rejectCallClick() {
