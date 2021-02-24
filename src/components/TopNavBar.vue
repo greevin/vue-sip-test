@@ -8,29 +8,25 @@
           <template #button-content>
             <i class="fa fa-phone"></i>
           </template>
-          <div class="p-2 pt-0 notification-body">
+          <div class="pt-4 notification-body" id="listCall">
             <strong>Ligações</strong>
-            <b-dropdown-divider></b-dropdown-divider>
-            <b-dropdown-item
-              v-for="(item, index) in notifications"
-              :key="index"
-            >
+            <hr />
+            <div v-for="(item, index) in notifications" :key="index">
               <b-row>
-                <b-col
-                  cols="10"
-                  style="padding-left: 0px"
-                  class="d-flex flex-column"
+                <b-col cols="10" class="d-flex flex-column"
                   ><span>{{ item.name }}</span>
                   <small>{{ item.sip }}</small></b-col
                 >
                 <b-col
                   cols="2"
-                  style="padding-right: 0px"
                   class="d-flex justify-content-center align-items-center"
-                  ><i class="fa fa-phone"></i
-                ></b-col>
+                  style="cursor: pointer"
+                >
+                  <i class="fa fa-phone" @click="clickCall(item.sip)"></i>
+                </b-col>
               </b-row>
-            </b-dropdown-item>
+              <hr />
+            </div>
           </div>
         </b-dropdown>
       </b-navbar-nav>
@@ -45,7 +41,14 @@ export default {
   data() {
     return {
       notifications,
+      dest: "",
     };
+  },
+  methods: {
+    clickCall(sip) {
+      this.dest = sip;
+      console.log(sip);
+    },
   },
 };
 </script>

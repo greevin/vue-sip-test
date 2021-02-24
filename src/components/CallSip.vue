@@ -75,26 +75,23 @@
         <div id="connectCall" @click="connectCallClick()">
           <i class="fa fa-phone"></i>
         </div>
-        <hr />
       </div>
 
-      <div class="p-2 pt-0 notification-body">
+      <div class="pt-4 notification-body" id="listCall">
         <strong>Ligações</strong>
         <hr />
         <div v-for="(item, index) in notifications" :key="index">
           <b-row>
-            <b-col
-              cols="10"
-              style="padding-left: 0px"
-              class="d-flex flex-column"
+            <b-col cols="10" class="d-flex flex-column"
               ><span>{{ item.name }}</span> <small>{{ item.sip }}</small></b-col
             >
             <b-col
               cols="2"
-              style="padding-right: 0px"
               class="d-flex justify-content-center align-items-center"
-              ><i class="fa fa-phone"></i
-            ></b-col>
+              style="cursor: pointer"
+            >
+              <i class="fa fa-phone" @click="clickCall(item.sip)"></i>
+            </b-col>
           </b-row>
           <hr />
         </div>
@@ -285,6 +282,10 @@ export default {
         this.session.mute({ audio: true });
       }
     },
+    clickCall(sip) {
+      this.dest = sip;
+      this.connectCallClick();
+    },
   },
   mounted() {
     this.startApp();
@@ -295,6 +296,10 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 @charset "UTF-8";
+
+#listCall .fa-phone {
+  font-size: 24px;
+}
 
 #incomingCall,
 #callStatus {
