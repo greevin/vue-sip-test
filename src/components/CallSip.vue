@@ -3,25 +3,40 @@
     <TopNavBar />
     <div id="errorMessage">{{ errorMessage }}</div>
     <div id="wrapper" v-if="showNumbers">
-      <div id="incomingCall" v-if="incomingCall">
+      <div
+        id="incomingCall"
+        v-if="incomingCall"
+        class="d-flex mt-3"
+        style="top: 185px"
+      >
         <div class="callInfo">
-          <h3>Incoming Call</h3>
-          <p id="incomingCallNumber">{{ incomingCallNumber }}</p>
+          <h5>Incoming Call</h5>
+          <p id="incomingCallNumber">{{ incomingCallNumber }} 6003</p>
         </div>
-        <div id="answer" @click="answerCallClick">
+        <div
+          id="answer"
+          @click="answerCallClick"
+          class="d-flex justify-content-center"
+        >
           <i class="fa fa-phone"></i>
         </div>
-        <div id="reject" @click="rejectCallClick">
+        <div
+          id="reject"
+          @click="rejectCallClick"
+          class="d-flex justify-content-center"
+        >
           <i class="fa fa-phone"></i>
         </div>
       </div>
 
       <div id="callStatus" v-if="callStatus">
         <div class="callInfo">
-          <h3 id="callInfoText">{{ callInfoText }}</h3>
+          <h5 id="callInfoText">{{ callInfoText }}</h5>
           <p id="callInfoNumber">{{ callInfoNumber }}</p>
         </div>
-        <div id="hangUp"><i class="fa fa-phone" @click="hangUp"></i></div>
+        <div id="hangUp" class="d-flex justify-content-center">
+          <i class="fa fa-phone" @click="hangUp"></i>
+        </div>
       </div>
 
       <!---------TO FIELD---------------------------------------------------->
@@ -44,10 +59,11 @@
         <div id="mute" @click="muteCall">
           <i id="muteIcon" class="fa" :class="muteIcon"></i>
         </div>
+        <hr />
       </div>
 
       <!---------DIAL CONTROLS-------------------------------------------->
-      <div id="callControl">
+      <div id="callControl" class="mt-3" style="display: block">
         <div id="to">
           <input
             id="toField"
@@ -59,6 +75,29 @@
         <div id="connectCall" @click="connectCallClick()">
           <i class="fa fa-phone"></i>
         </div>
+        <hr />
+      </div>
+
+      <div class="p-2 pt-0 notification-body">
+        <strong>Ligações</strong>
+        <hr />
+        <div v-for="(item, index) in notifications" :key="index">
+          <b-row>
+            <b-col
+              cols="10"
+              style="padding-left: 0px"
+              class="d-flex flex-column"
+              ><span>{{ item.name }}</span> <small>{{ item.sip }}</small></b-col
+            >
+            <b-col
+              cols="2"
+              style="padding-right: 0px"
+              class="d-flex justify-content-center align-items-center"
+              ><i class="fa fa-phone"></i
+            ></b-col>
+          </b-row>
+          <hr />
+        </div>
       </div>
     </div>
   </div>
@@ -67,6 +106,7 @@
 <script>
 import JsSIP from "jssip";
 import TopNavBar from "./TopNavBar";
+import notifications from "../data/notifications";
 export default {
   name: "CallSip",
   props: {
@@ -77,6 +117,7 @@ export default {
   },
   data() {
     return {
+      notifications,
       callOptions: {
         mediaConstraints: { audio: true, video: false },
       },
@@ -255,6 +296,17 @@ export default {
 <style scoped>
 @charset "UTF-8";
 
+#incomingCall,
+#callStatus {
+  position: fixed;
+  top: 76px;
+  right: 30px;
+  z-index: 20;
+  background: white;
+  box-shadow: 0 10px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  padding: 15px;
+}
+
 /* CSS Document */
 #wrapper {
   width: 300px;
@@ -264,7 +316,7 @@ export default {
   text-align: center;
 }
 .callInfo {
-  width: 190px;
+  width: 150px;
   height: 70px;
   float: left;
 }
@@ -283,9 +335,8 @@ export default {
   -ms-user-select: none;
   user-select: none;
 }
-.callInfo h3 {
+.callInfo h5 {
   color: #389400;
-  margin: 10px 0 10px 0;
 }
 .callInfo p {
   margin: 0px 25px 0px 0px;
@@ -300,7 +351,6 @@ export default {
   background-color: #389400;
   width: 50px;
   height: 50px;
-  float: right;
   text-align: center;
   font-size: 30px;
   margin: 10px 0px 10px 0px;
@@ -310,6 +360,7 @@ export default {
   cursor: pointer;
   cursor: hand;
 }
+
 #mute:active,
 #connectCall:active,
 #reject:active,
@@ -328,6 +379,7 @@ export default {
   -webkit-transform: rotate(135deg);
   /* Chrome, Safari, Opera */
   transform: rotate(135deg);
+  float: right;
 }
 #hangUp {
   background-color: #a90002;
@@ -336,6 +388,7 @@ export default {
   background-color: #fff;
   color: #a90002;
   margin-right: 10px;
+  margin-left: 10px;
 }
 #connectCall,
 #mute {
@@ -354,10 +407,10 @@ export default {
 }
 #mute {
   color: #545454;
-  margin: 0 auto;
-  width: 50px;
-  height: 50px;
-  margin: 15px 125px 10px 20px;
+  /* margin: 0 auto; */
+  /* width: 50px; */
+  /* height: 50px; */
+  /* margin: 15px 125px 10px 20px; */
   border-radius: 25px 25px 25px 25px;
   -moz-border-radius: 25px 25px 25px 25px;
   -webkit-border-radius: 25px 25px 25px 25px;
@@ -371,7 +424,6 @@ export default {
   border-bottom: 2px solid #bbbbbb;
 }
 #toField {
-  margin-top: 20px;
   padding-left: 10px;
   font-size: 1em;
   font-family: "Open Sans", sans-serif;

@@ -18,6 +18,11 @@ const data = [
     name: 'Sala CASN',
     sip: 'sip:casn_cbrdxv@tryit.jssip.net',
     id: 4
+  },
+  {
+    name: 'Sala CASN 2',
+    sip: 'sip:casn2_cbrdxv@tryit.jssip.net',
+    id: 5
   }
 ]
 export default data
