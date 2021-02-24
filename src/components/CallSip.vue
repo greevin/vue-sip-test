@@ -18,7 +18,7 @@
       >
         <div class="callInfo">
           <h5>Incoming Call</h5>
-          <p id="incomingCallNumber">{{ incomingCallNumber }} 6003</p>
+          <p id="incomingCallNumber">{{ incomingCallNumber }}</p>
         </div>
         <div
           id="answer"
@@ -126,13 +126,13 @@ export default {
         mediaConstraints: { audio: true, video: false },
       },
       configuration: {
-        sockets: [new JsSIP.WebSocketInterface("wss://20.51.122.220:8089/ws")],
-        uri: "sip:6001@20.51.122.220", // FILL SIP URI HERE like sip:sip-user@your-domain.bwapp.bwsip.io
-        password: "6001$", // FILL PASSWORD HERE
+        sockets: [new JsSIP.WebSocketInterface("wss://tryit.jssip.net:10443")],
+        uri: "sip:teste_cbrdxv@tryit.jssip.net", // FILL SIP URI HERE like sip:sip-user@your-domain.bwapp.bwsip.io
+        password: "1234", // FILL PASSWORD HERE
         register: true,
       },
       dest: "sip:teste_cbrdxv@tryit.jssip.net",
-      incomingCallAudio: new window.Audio("@/assets/dial-tone.mp3"),
+      incomingCallAudio: new window.Audio(require("@/assets/dial-tone.mp3")),
       phone: null,
       remoteAudio: new window.Audio(),
       session: null,
