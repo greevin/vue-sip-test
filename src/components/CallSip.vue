@@ -2,6 +2,13 @@
   <div class="hello">
     <TopNavBar />
     <div id="errorMessage">{{ errorMessage }}</div>
+    <div style="text-align: center" v-if="disconnected">
+      <p style="margin-bottom: 0px">
+        reconnection attempt: {{ recoverAttempts }}
+      </p>
+      <p>next connection attempt in {{ recoveryTimer }} seconds</p>
+    </div>
+
     <div id="wrapper" v-if="showNumbers">
       <div
         id="incomingCall"
@@ -137,6 +144,9 @@ export default {
       callStatus: false,
       incomingCallNumber: "",
       incomingCall: false,
+      recoverAttempts: "",
+      recoveryTimer: "",
+      disconnected: false,
     };
   },
   methods: {
@@ -162,9 +172,18 @@ export default {
           this.configuration.uri = null;
           this.configuration.password = null;
           this.showNumbers = false;
-          console.log("registrationFailed");
 
           this.updateUI();
+        });
+
+        this.phone.on("connected", function () {
+          console.log("connected");
+        });
+
+        this.phone.on("disconnected", () => {
+          this.disconnected = true;
+          this.recoverAttempts = this.phone.transport.recover_attempts + 1;
+          this.recoveryTimer = this.phone.transport.recovery_timer + 1;
         });
 
         this.phone.on("newRTCSession", (ev) => {
