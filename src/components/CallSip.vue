@@ -18,7 +18,7 @@
       >
         <div class="callInfo">
           <h5>Incoming Call</h5>
-          <p id="incomingCallNumber">{{ incomingCallNumber }} 6003</p>
+          <p id="incomingCallNumber">{{ incomingCallNumber }}</p>
         </div>
         <div
           id="answer"
@@ -213,13 +213,13 @@ export default {
             this.updateUI();
           });
           this.session.on("confirmed", () => {
-            let localStream = this.session.connection.getLocalStreams()[0];
-            let dtmfSender = this.session.connection.createDTMFSender(
-              localStream.getAudioTracks()[0]
-            );
-            this.session.sendDTMF = (tone) => {
-              dtmfSender.insertDTMF(tone);
-            };
+            // let localStream = this.session.connection.getLocalStreams()[0];
+            // let dtmfSender = this.session.connection.createDTMFSender(
+            //   localStream.getAudioTracks()[0]
+            // );
+            // this.session.sendDTMF = (tone) => {
+            //   dtmfSender.insertDTMF(tone);
+            // };
             this.updateUI();
           });
 
