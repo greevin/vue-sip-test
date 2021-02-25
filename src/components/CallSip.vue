@@ -127,8 +127,8 @@ export default {
       },
       configuration: {
         sockets: [new JsSIP.WebSocketInterface("wss://20.51.122.220:8089/ws")],
-        uri: "sip:6009@20.51.122.220", // FILL SIP URI HERE like sip:sip-user@your-domain.bwapp.bwsip.io
-        password: "6009$", // FILL PASSWORD HERE
+        uri: "sip:6001@20.51.122.220", // FILL SIP URI HERE like sip:sip-user@your-domain.bwapp.bwsip.io
+        password: "6001$", // FILL PASSWORD HERE
         register: true,
       },
       dest: "sip:teste_cbrdxv@tryit.jssip.net",
@@ -203,7 +203,7 @@ export default {
           this.session.on("peerconnection", (data) => {
             data.peerconnection.addEventListener("addstream", (e) => {
               this.incomingCallAudio.pause();
-              this.remoteAudio.src = window.URL.createObjectURL(e.stream);
+              this.remoteAudio.srcObject = e.stream;
             });
           });
 
