@@ -302,7 +302,6 @@ export default {
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 @charset "UTF-8";
 
@@ -310,6 +309,7 @@ export default {
   font-size: 24px;
 }
 
+/* prettier-ignore */
 #incomingCall,
 #callStatus {
   position: fixed;
@@ -421,10 +421,6 @@ export default {
 }
 #mute {
   color: #545454;
-  /* margin: 0 auto; */
-  /* width: 50px; */
-  /* height: 50px; */
-  /* margin: 15px 125px 10px 20px; */
   border-radius: 25px 25px 25px 25px;
   -moz-border-radius: 25px 25px 25px 25px;
   -webkit-border-radius: 25px 25px 25px 25px;
