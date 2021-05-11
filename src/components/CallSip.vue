@@ -108,55 +108,56 @@
 </template>
 
 <script>
-import JsSIP from "jssip";
-import TopNavBar from "./TopNavBar";
-import notifications from "../data/notifications";
+import JsSIP from 'jssip';
+import TopNavBar from './TopNavBar';
+import notifications from '../data/notifications';
 export default {
-  name: "CallSip",
+  name: 'CallSip',
   props: {
-    msg: String,
+    msg: String
   },
   components: {
-    TopNavBar,
+    TopNavBar
   },
   data() {
     return {
       notifications,
       callOptions: {
-        mediaConstraints: { audio: true, video: false },
+        mediaConstraints: { audio: true, video: false }
       },
       configuration: {
-        sockets: [new JsSIP.WebSocketInterface("wss://20.51.122.220:8089/ws")],
-        uri: "sip:6001@20.51.122.220", // FILL SIP URI HERE like sip:sip-user@your-domain.bwapp.bwsip.io
-        password: "6001$", // FILL PASSWORD HERE
-        register: true,
+        sockets: [new JsSIP.WebSocketInterface('wss://20.51.122.220:8089/ws')],
+        // FILL SIP URI HERE like sip:sip-user@your-domain.bwapp.bwsip.io
+        uri: 'sip:6001@20.51.122.220',
+        password: '6001$', // FILL PASSWORD HERE
+        register: true
       },
-      dest: "sip:teste_cbrdxv@tryit.jssip.net",
-      incomingCallAudio: new window.Audio(require("@/assets/dial-tone.mp3")),
+      dest: 'sip:teste_cbrdxv@tryit.jssip.net',
+      incomingCallAudio: new window.Audio(require('@/assets/dial-tone.mp3')),
       phone: null,
       remoteAudio: new window.Audio(),
       session: null,
-      errorMessage: "must set sip uri/password",
+      errorMessage: 'must set sip uri/password',
       showNumbers: false,
-      muteIcon: "fa-microphone",
-      callInfoNumber: "",
-      callInfoText: "",
+      muteIcon: 'fa-microphone',
+      callInfoNumber: '',
+      callInfoText: '',
       callStatus: false,
-      incomingCallNumber: "",
+      incomingCallNumber: '',
       incomingCall: false,
-      recoverAttempts: "",
-      recoveryTimer: "",
-      disconnected: false,
+      recoverAttempts: '',
+      recoveryTimer: '',
+      disconnected: false
     };
   },
   methods: {
     incomingCallOptions() {
       this.incomingCallAudio.loop = true;
-      this.incomingCallAudio.crossOrigin = "anonymous";
+      this.incomingCallAudio.crossOrigin = 'anonymous';
     },
     remoteAudioOptions() {
       this.remoteAudio.autoplay = true;
-      this.remoteAudio.crossOrigin = "anonymous";
+      this.remoteAudio.crossOrigin = 'anonymous';
     },
     startApp() {
       this.incomingCallOptions();
@@ -165,10 +166,10 @@ export default {
       this.phone = new JsSIP.UA(this.configuration);
 
       if (this.configuration.uri && this.configuration.password) {
-        JsSIP.debug.enable("JsSIP:*");
-        this.phone.on("registrationFailed", (ev) => {
+        JsSIP.debug.enable('JsSIP:*');
+        this.phone.on('registrationFailed', ev => {
           this.errorMessage =
-            "Registering on SIP server failed with error: " + ev.cause;
+            'Registering on SIP server failed with error: ' + ev.cause;
           this.configuration.uri = null;
           this.configuration.password = null;
           this.showNumbers = false;
@@ -176,18 +177,18 @@ export default {
           this.updateUI();
         });
 
-        this.phone.on("connected", function () {
-          console.log("connected");
+        this.phone.on('connected', function () {
+          console.log('connected');
         });
 
-        this.phone.on("disconnected", () => {
+        this.phone.on('disconnected', () => {
           this.disconnected = true;
           this.recoverAttempts = this.phone.transport.recover_attempts + 1;
           this.recoveryTimer = this.phone.transport.recovery_timer + 1;
         });
 
-        this.phone.on("newRTCSession", (ev) => {
-          let newSession = ev.session;
+        this.phone.on('newRTCSession', ev => {
+          const newSession = ev.session;
 
           if (this.session) {
             // hangup any existing call
@@ -195,38 +196,31 @@ export default {
           }
 
           this.session = newSession;
-          let completeSession = () => {
+          const completeSession = () => {
             this.session = null;
             this.updateUI();
           };
 
-          this.session.on("peerconnection", (data) => {
-            data.peerconnection.addEventListener("addstream", (e) => {
+          this.session.on('peerconnection', data => {
+            data.peerconnection.addEventListener('addstream', e => {
               this.incomingCallAudio.pause();
               this.remoteAudio.srcObject = e.stream;
             });
           });
 
-          this.session.on("ended", completeSession);
-          this.session.on("failed", completeSession);
-          this.session.on("accepted", () => {
+          this.session.on('ended', completeSession);
+          this.session.on('failed', completeSession);
+          this.session.on('accepted', () => {
             this.updateUI();
           });
-          this.session.on("confirmed", () => {
-            // let localStream = this.session.connection.getLocalStreams()[0];
-            // let dtmfSender = this.session.connection.createDTMFSender(
-            //   localStream.getAudioTracks()[0]
-            // );
-            // this.session.sendDTMF = (tone) => {
-            //   dtmfSender.insertDTMF(tone);
-            // };
+          this.session.on('confirmed', () => {
             this.updateUI();
           });
 
-          if (this.session.direction === "incoming") {
+          if (this.session.direction === 'incoming') {
             this.incomingCallAudio.play();
           } else {
-            this.session.connection.addEventListener("addstream", (e) => {
+            this.session.connection.addEventListener('addstream', e => {
               this.incomingCallAudio.pause();
               this.remoteAudio.srcObject = e.stream;
             });
@@ -240,21 +234,21 @@ export default {
     },
     updateUI() {
       if (this.configuration.uri && this.configuration.password) {
-        this.errorMessage = "";
+        this.errorMessage = '';
         this.showNumbers = true;
 
         if (this.session) {
           if (this.session.isInProgress()) {
-            if (this.session.direction === "incoming") {
+            if (this.session.direction === 'incoming') {
               this.incomingCallNumber = this.session.remote_identity.uri;
               this.incomingCall = true;
             } else {
-              this.callInfoText = "Ringing...";
+              this.callInfoText = 'Ringing...';
               this.callInfoNumber = this.session.remote_identity.uri.user;
               this.callStatus = true;
             }
           } else if (this.session.isEstablished()) {
-            this.callInfoText = "In Call";
+            this.callInfoText = 'In Call';
             this.callInfoNumber = this.session.remote_identity.uri.user;
             this.callStatus = true;
             this.incomingCallAudio.pause();
@@ -267,9 +261,9 @@ export default {
 
         //microphone mute icon
         if (this.session && this.session.isMuted().audio) {
-          this.muteIcon = "fa-microphone-slash";
+          this.muteIcon = 'fa-microphone-slash';
         } else {
-          this.muteIcon = "fa-microphone";
+          this.muteIcon = 'fa-microphone';
         }
       } else {
         this.showNumbers = false;
@@ -281,9 +275,6 @@ export default {
     answerCallClick() {
       this.session.answer(this.callOptions);
     },
-    inCallButtons(e) {
-      console.log(e);
-    },
     terminateCall() {
       this.session.terminate();
     },
@@ -294,7 +285,6 @@ export default {
       this.terminateCall();
     },
     muteCall() {
-      console.log("MUTE CLICKED");
       if (this.session.isMuted().audio) {
         this.session.unmute({ audio: true });
       } else {
@@ -304,11 +294,11 @@ export default {
     clickCall(sip) {
       this.dest = sip;
       this.connectCallClick();
-    },
+    }
   },
   mounted() {
     this.startApp();
-  },
+  }
 };
 </script>
 
@@ -450,7 +440,7 @@ export default {
 #toField {
   padding-left: 10px;
   font-size: 1em;
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
   width: 300px;
   height: 40px;
   border-radius: 2px 2px 2px 2px;
